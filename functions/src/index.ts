@@ -364,21 +364,135 @@ export const registerOrganization = functions.https.onCall(async (data, context)
         await firebase.firestore().collection('Organizations').
             doc((orgcounts.organizationCount).toString()).
             set(organization, { merge: true })
-        // await firebase.functions().httpsCallable('setCustomClaims')({
-        //     email: organization.email,
-        //     customClaims: {
-        //         roles: {
-        //             isOwner: true
-        //         },
-        //         organizationId: organization.organizationId
-        //     }
-        // }).then(x => {
-        //     console.log(x)
-        // }).catch(err => {
-        //     throw new functions.https.HttpsError("internal", err);
-        // })
+        await firebase.functions().httpsCallable('setCustomClaims')({
+            email: organization.email,
+            customClaims: {
+                roles: {
+                    isOwner: true
+                },
+                organizationId: organization.organizationId
+            }
+        }).then(x => {
+            console.log(x)
+        }).catch(err => {
+            throw new functions.https.HttpsError("internal", err);
+        })
     }
     catch (err) {
         throw new functions.https.HttpsError("internal", "end" + err);
     }
+})
+
+exports.myFunctionName = functions.firestore.document('Organizations/{organization}').onWrite(async (change, context) => {
+    console.log("context")
+    console.log(change.after.data())
+    console.log(change.before.data())
+    console.log("context")
+    // console.log(context.eventId)
+    // console.log(context.authType)
+    // console.log(context.auth)
+    // console.log(context.eventType)
+    // console.log(context.params)
+    // console.log(context.resource)
+    // console.log(context.timestamp)
+    // console.log(context.auth!.token)
+    const email = "nipunmadan19@gmail.com"
+    const effectedUser = await admin.auth().getUserByEmail(email).catch(async err => {
+        if (err["errorInfo"]["code"] === "auth/user-not-found") {
+            console.log("New user creation")
+            return await admin.auth().createUser({
+                email: email
+            })
+        }
+        return
+    });
+    console.log("setCustomUserClaims")
+    await admin.auth().setCustomUserClaims(effectedUser!.uid, {
+        role: 'superAdmin'
+    }).then(() => {
+        console.log("setCustomUserClaims doneƒ")
+    })
+})
+
+export const registerOrganizationTest = functions.https.onCall(async (data, context) => {
+    console.log("organizationCount")
+    const orgcounts = {
+        organizationCount: 0
+    }
+    // const organization = {
+    //     name: 'shivedale',
+    //     phoneNumber: '32323',
+    //     organizationId: "1",
+    //     email: 'nipunmadan19@gmail.com'
+
+    // }
+    let organization = data.organization
+    // let organizationCount = await firebase.firestore().doc('Organizations/count/organizationCount').get()
+    try {
+        const effectedUser = await admin.auth().getUserByEmail(organization.email)
+        await admin.auth().setCustomUserClaims(effectedUser.uid, {
+            email: organization.email,
+            role: 'superAdmin',
+            organizationId: organization.organizationId
+        }).then(x => {
+            console.log(x)
+        }).catch(err => {
+            throw new functions.https.HttpsError("internal", err);
+        })
+        if (!context.auth) {
+            throw new functions.https.HttpsError("internal", "Dsdd");
+        }
+        console.log("organizationCount1")
+        console.log(context.auth.token)
+        console.log(context.auth)
+        console.log(context.instanceIdToken)
+        console.log(context.rawRequest)
+        console.log(context.auth.token.role)
+        const organizationCount = await firebase.firestore().collection('Organizations').doc('counts').get().catch(err => {
+            console.log("error while executing" + err)
+            return err
+        });
+        console.log("organizationCount2")
+        if (organizationCount.exists && organizationCount.data() !== undefined) {
+            orgcounts.organizationCount = organizationCount.data()!.organizationCount + 1
+            organization.organizationId = (orgcounts.organizationCount).toString()
+        }
+        await firebase.firestore().collection('Organizations').doc('counts').set(orgcounts, { merge: true })
+        await firebase.firestore().collection('Organizations').
+            doc((orgcounts.organizationCount).toString()).
+            set(organization, { merge: true })
+    }
+    catch (err) {
+        throw new functions.https.HttpsError("internal", err);
+    }
+})
+
+exports.setCustomClaims = functions.firestore.document('Organizations/{organization}').onWrite(async (change, context) => {
+    getUserByEmail = change.after.data().email
+
+
+
+    const effectedUser = await admin.auth().getUserByEmail(email).catch(async err => {
+        if (err["errorInfo"]["code"] === "auth/user-not-found") {
+            console.log("New user creation")
+            return await admin.auth().createUser({
+                email: email
+            })
+        }
+        return
+    });
+    console.log("setCustomUserClaims")
+    await admin.auth().setCustomUserClaims(effectedUser!.uid, {
+        role: 'superAdmin'
+    }).then(() => {
+        console.log("setCustomUserClaims doneƒ")
+    })
+    await firebase.firestore().collection("Organizations").doc("1").update({
+        phoneNumber: "12345678"
+    }).then(x => {
+        console.log(x)
+        console.log("doc updated")
+    }).catch(err => {
+        console.log("eerr" + err)
+    })
 })

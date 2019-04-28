@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { AngularFirestore } from '@angular/fire/firestore';
+import { AngularFireAuth } from '@angular/fire/auth';
+import { LoginService } from '../login.service';
 
 @Component({
   selector: 'app-list',
@@ -6,34 +9,33 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['list.page.scss']
 })
 export class ListPage implements OnInit {
-  private selectedItem: any;
-  private icons = [
-    'flask',
-    'wifi',
-    'beer',
-    'football',
-    'basketball',
-    'paper-plane',
-    'american-football',
-    'boat',
-    'bluetooth',
-    'build'
-  ];
-  public items: Array<{ title: string; note: string; icon: string }> = [];
-  constructor() {
-    for (let i = 1; i < 11; i++) {
-      this.items.push({
-        title: 'Item ' + i,
-        note: 'This is item #' + i,
-        icon: this.icons[Math.floor(Math.random() * this.icons.length)]
-      });
-    }
+  constructor(private db: AngularFirestore, private afa: AngularFireAuth, private ls: LoginService) {
   }
 
   ngOnInit() {
   }
-  // add back when alpha.4 is out
-  // navigate(item) {
-  //   this.router.navigate(['/list', JSON.stringify(item)]);
-  // }
+
+  async getClaims() {
+    return await this.afa.idTokenResult.subscribe(claims => {
+      return claims;
+    })
+  }
+  async getUsers() {
+    // await this.afa.idToken.subscribe(x => {
+    //   console.log(x)
+    // })
+    // await this.afa.user.subscribe(x => {
+    //   console.log(x)
+    // })
+    // const claims = this.afa.idTokenResult.subscribe(claims => {
+    //   return claims;
+    // })
+    console.log("this.ls.claims")
+    console.log(this.ls.claims)
+    console.log(this.ls.claims.organizationId)
+    console.log(this.db.collection('Organizations').doc(this.ls.claims.organizationId).get().subscribe(x => {
+      console.log(x)
+      console.log(x.data())
+    }))
+  }
 }

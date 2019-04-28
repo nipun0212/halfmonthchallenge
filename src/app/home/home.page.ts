@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { auth } from 'firebase/app';
+import { HttpClient } from '@angular/common/http';
 import { MatTableDataSource, MatSort } from '@angular/material';
 import { DataSource } from '@angular/cdk/table';
 // var sizeof = require('object-sizeof');
@@ -43,7 +44,7 @@ export class HomePage {
   displayedColumns: string[] = ['position', 'name', 'weight', 'symbol'];
   dataSource = ELEMENT_DATA;
   organizations: Observable<Organization[]>
-  constructor(private db: AngularFirestore, public afAuth: AngularFireAuth, private fns: AngularFireFunctions) {
+  constructor(private http: HttpClient, private db: AngularFirestore, public afAuth: AngularFireAuth, private fns: AngularFireFunctions) {
     this.organizations = this.db.collection("organizations").snapshotChanges().pipe(
       map(actions => actions.map(a => {
         const data = a.payload.doc.data() as Organization;
@@ -92,7 +93,52 @@ export class HomePage {
   logout() {
     this.afAuth.auth.signOut();
   }
+  async registerOrg() {
+    const organization= {
+      name: 'shivedale',
+      emails: '10'
+    };
+    const docRef = await this.db.collection('Organizations').add(organization);
+    console.log(docRef)
+  }
   setCustomClaims() {
+    const callable1 = this.fns.httpsCallable('registerOrganizationTest');
+    callable1({
+      organization: {
+        name: 'shivedale',
+        phoneNumber: '32323',
+        organizationId: "1",
+        email: 'nipunmadan19@gmail.com'
+
+      }
+
+    }).subscribe(r => {
+      console.log("result")
+      console.log(r)
+    }, err => console.error("cdd")
+    )
+    this.db.collection("Organizations").doc("1").update({
+      phoneNumber: "12345"
+    }).then(x => {
+      console.log(x)
+      console.log("doc updated")
+    }).catch(err => {
+      console.log("eerr" + err)
+    })
+    this.http.get("http://localhost:5000/onemonthchallenge-fb0e8/us-central1/registerOrganizationTest").subscribe(x => {
+      console.log("URL Called")
+      console.log(x)
+    })
+    this.afAuth.auth.currentUser.getIdToken(true).then(x => {
+      console.log("token refreshed")
+      console.log(x)
+    })
+    this.afAuth.idTokenResult.subscribe(x => {
+      console.log(x)
+      console.log("x.claims")
+      console.log(x.claims)
+      // console.log(sizeof(x.claims))
+    })
     const callable = this.fns.httpsCallable('setCustomClaims');
     callable({
       customClaims: {
