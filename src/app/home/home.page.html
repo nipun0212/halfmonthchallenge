@@ -15,7 +15,9 @@
 <div>
   <button (click)="registerOrg()">registerOrg</button>
 </div>
-
+<div>
+  <button (click)="getOrg()">getOrg</button>
+</div>
 <ion-list lines=undefined inset=false>
   <ion-item *ngFor="let org of organizations |async">
     <ion-label>

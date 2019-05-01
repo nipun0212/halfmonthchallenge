@@ -94,9 +94,10 @@ export class HomePage {
     this.afAuth.auth.signOut();
   }
   async registerOrg() {
-    const organization= {
+    const organization = {
       name: 'shivedale',
-      emails: '10'
+      email: 'annubajaj89@gmail.com',
+      phoneNumber: '8989898'
     };
     const docRef = await this.db.collection('Organizations').add(organization);
     console.log(docRef)
@@ -195,6 +196,12 @@ export class HomePage {
         console.log(x)
       })
     })
+  }
+
+  getOrg(){
+    this.db.collection("Organizations").get().subscribe(x=>{
+      console.log(x.size)
+    });
   }
 }
 

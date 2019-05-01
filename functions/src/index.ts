@@ -466,33 +466,24 @@ export const registerOrganizationTest = functions.https.onCall(async (data, cont
         throw new functions.https.HttpsError("internal", err);
     }
 })
-
-exports.setCustomClaims = functions.firestore.document('Organizations/{organization}').onWrite(async (change, context) => {
-    getUserByEmail = change.after.data().email
-
-
-
-    const effectedUser = await admin.auth().getUserByEmail(email).catch(async err => {
+exports.setCustomClaimTrigger = functions.firestore.document('Organizations/{organization}').onWrite(async (change, context) => {
+    const effectedUserEmail = change.after.data()!.email;
+    console.log("context")
+    console.log(context)
+    const customClaimObj = {
+        role: 'owner',
+        organizationId: context.params!.organization
+    }
+    const effectedUser = await admin.auth().getUserByEmail(effectedUserEmail).catch(async err => {
         if (err["errorInfo"]["code"] === "auth/user-not-found") {
             console.log("New user creation")
             return await admin.auth().createUser({
-                email: email
+                email: effectedUserEmail
             })
         }
-        return
-    });
-    console.log("setCustomUserClaims")
-    await admin.auth().setCustomUserClaims(effectedUser!.uid, {
-        role: 'superAdmin'
-    }).then(() => {
-        console.log("setCustomUserClaims doneƒ")
+        throw new functions.https.HttpsError("internal", "User Creation with email " + effectedUserEmail + " failed");
     })
-    await firebase.firestore().collection("Organizations").doc("1").update({
-        phoneNumber: "12345678"
-    }).then(x => {
-        console.log(x)
-        console.log("doc updated")
-    }).catch(err => {
-        console.log("eerr" + err)
-    })
+    console.log("effectedUser")
+    await admin.auth().setCustomUserClaims(effectedUser.uid, customClaimObj)
+    return "User with email " + effectedUserEmail + " given role " + 'owner'
 })
