@@ -454,7 +454,7 @@ export const registerOrganizationTest = functions.https.onCall(async (data, cont
         });
         console.log("organizationCount2")
         if (organizationCount.exists && organizationCount.data() !== undefined) {
-            orgcounts.organizationCount = organizationCount.data()!.organizationCount + 1
+            orgcounts.organizationCount = organizationCount.data().organizationCount + 1
             organization.organizationId = (orgcounts.organizationCount).toString()
         }
         await firebase.firestore().collection('Organizations').doc('counts').set(orgcounts, { merge: true })
@@ -466,13 +466,13 @@ export const registerOrganizationTest = functions.https.onCall(async (data, cont
         throw new functions.https.HttpsError("internal", err);
     }
 })
-exports.setCustomClaimTrigger = functions.firestore.document('Organizations/{organization}').onWrite(async (change, context) => {
+exports.giveOwnerRoleToOrganizationUser = functions.firestore.document('Organizations/{organization}').onWrite(async (change, context) => {
     const effectedUserEmail = change.after.data()!.email;
     console.log("context")
     console.log(context)
     const customClaimObj = {
         role: 'owner',
-        organizationId: context.params!.organization
+        organizationId: context.params.organization
     }
     const effectedUser = await admin.auth().getUserByEmail(effectedUserEmail).catch(async err => {
         if (err["errorInfo"]["code"] === "auth/user-not-found") {
@@ -486,4 +486,8 @@ exports.setCustomClaimTrigger = functions.firestore.document('Organizations/{org
     console.log("effectedUser")
     await admin.auth().setCustomUserClaims(effectedUser.uid, customClaimObj)
     return "User with email " + effectedUserEmail + " given role " + 'owner'
+})
+
+exports.giveOwnerRoleToOrganizationUser = functions.firestore.document('Organizations/{organization}').onCreate(async (change, context) => {
+    context.params.organization
 })

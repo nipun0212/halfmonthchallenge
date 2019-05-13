@@ -1,0 +1,18 @@
+<!-- <ion-button shape="round" (click)="createOrganization()">Round Button</ion-button>
+<ion-button shape="round" (click)="getOrganizations()">Round Button</ion-button> -->
+<!-- List of Text Items -->
+<ion-content>
+    <ion-tabs>
+        <ion-tab-bar slot="bottom">
+            <ion-tab-button tab="addOrganization">
+                <ion-icon name="calendar"></ion-icon>
+                <ion-label>Add Organization</ion-label>
+            </ion-tab-button>
+        </ion-tab-bar>
+    </ion-tabs>
+    <ion-list lines=undefined inset=false>
+        <ion-item *ngFor="let o of orgs | async">
+            <ion-label>{{o.name}}</ion-label>
+        </ion-item>
+    </ion-list>
+</ion-content>
